@@ -263,6 +263,70 @@
         .other-projects .website-card:nth-child(1) { animation-delay: 3.8s; }
         .other-projects .website-card:nth-child(2) { animation-delay: 4s; }
 
+        /* Секретная кнопка */
+        .secret-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 0, 0, 0.2);
+            border: 2px solid transparent;
+            border-radius: 50%;
+            cursor: pointer;
+            opacity: 0;
+            transform: scale(0);
+            animation: secretAppear 1s ease-out 4.5s forwards;
+            z-index: 1000;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .secret-button:hover {
+            background: rgba(255, 0, 0, 0.4);
+            border-color: #ff0000;
+            transform: scale(1.1);
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+        }
+
+        .secret-button:active {
+            transform: scale(0.95);
+        }
+
+        .secret-button::before {
+            content: '?';
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 24px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .secret-button:hover::before {
+            color: #ff0000;
+            transform: rotate(360deg);
+        }
+
+        .secret-button::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: radial-gradient(circle, transparent 30%, rgba(255,0,0,0.1) 70%);
+            animation: secretPulse 2s infinite;
+        }
+
+        /* Мигание на мобильных устройствах */
+        @media (max-width: 768px) {
+            .secret-button {
+                animation: secretAppear 1s ease-out 4.5s forwards,
+                         secretBlink 1s ease-in-out 10s 3;
+            }
+        }
+
         /* Анимации */
         @keyframes fadeInUp {
             to {
@@ -348,6 +412,43 @@
             100% { left: 100%; }
         }
 
+        @keyframes secretAppear {
+            0% {
+                opacity: 0;
+                transform: scale(0) rotate(-180deg);
+            }
+            70% {
+                opacity: 1;
+                transform: scale(1.2) rotate(20deg);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1) rotate(0deg);
+            }
+        }
+
+        @keyframes secretPulse {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 0.5;
+            }
+            50% {
+                transform: scale(1.1);
+                opacity: 0.8;
+            }
+        }
+
+        @keyframes secretBlink {
+            0%, 100% {
+                opacity: 0.3;
+                box-shadow: 0 0 10px rgba(255,0,0,0.3);
+            }
+            50% {
+                opacity: 1;
+                box-shadow: 0 0 25px rgba(255,0,0,0.8);
+            }
+        }
+
         /* Анимация фона */
         body::before {
             content: '';
@@ -393,6 +494,17 @@
                 padding: 20px;
                 margin: 20px 0;
             }
+
+            .secret-button {
+                width: 50px;
+                height: 50px;
+                bottom: 15px;
+                right: 15px;
+            }
+
+            .secret-button::before {
+                font-size: 20px;
+            }
         }
 
         @media (max-width: 480px) {
@@ -412,10 +524,24 @@
             .info-section h3 {
                 font-size: 1.1rem;
             }
+
+            .secret-button {
+                width: 45px;
+                height: 45px;
+                bottom: 10px;
+                right: 10px;
+            }
+
+            .secret-button::before {
+                font-size: 18px;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- Секретная кнопка -->
+    <div class="secret-button" id="secretButton" title="Секретная кнопка"></div>
+
     <div class="container">
         <header class="header">
             <div class="logo">EX<span>3</span>M</div>
@@ -516,6 +642,130 @@
                     }, 100);
                 });
             });
+
+            // Обработка секретной кнопки
+            const secretButton = document.getElementById('secretButton');
+            let clickCount = 0;
+            const secretLink = 'https://github.com/EX3M04/EX3M-SITE/blob/main/hello.exe';
+
+            secretButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                clickCount++;
+                
+                // Анимация нажатия
+                this.style.transform = 'scale(0.8)';
+                this.style.backgroundColor = 'rgba(255, 0, 0, 0.6)';
+                
+                // Меняем текст при многократных нажатиях
+                if (clickCount === 1) {
+                    this.style.setProperty('--secret-text', '"!"');
+                    this.style.setProperty('--secret-color', '#ff0000');
+                } else if (clickCount === 2) {
+                    this.style.setProperty('--secret-text', '"EXE"');
+                    this.style.setProperty('--secret-color', '#ff3333');
+                } else if (clickCount === 3) {
+                    this.style.setProperty('--secret-text', '"↓"');
+                    this.style.setProperty('--secret-color', '#ff6666');
+                    
+                    // На третье нажатие - переход по ссылке
+                    setTimeout(() => {
+                        window.open(secretLink, '_blank');
+                    }, 300);
+                }
+                
+                setTimeout(() => {
+                    this.style.transform = '';
+                    this.style.backgroundColor = '';
+                }, 200);
+            });
+
+            // Добавляем возможность перетаскивания секретной кнопки на ПК
+            let isDragging = false;
+            let startX, startY, initialX, initialY;
+
+            secretButton.addEventListener('mousedown', function(e) {
+                if (window.innerWidth > 768) { // Только на ПК
+                    isDragging = true;
+                    startX = e.clientX;
+                    startY = e.clientY;
+                    initialX = this.offsetLeft;
+                    initialY = this.offsetTop;
+                    
+                    this.style.cursor = 'grabbing';
+                    this.style.transition = 'none';
+                }
+            });
+
+            document.addEventListener('mousemove', function(e) {
+                if (isDragging && secretButton) {
+                    const dx = e.clientX - startX;
+                    const dy = e.clientY - startY;
+                    
+                    secretButton.style.left = (initialX + dx) + 'px';
+                    secretButton.style.top = (initialY + dy) + 'px';
+                    secretButton.style.right = 'auto';
+                    secretButton.style.bottom = 'auto';
+                }
+            });
+
+            document.addEventListener('mouseup', function() {
+                if (isDragging && secretButton) {
+                    isDragging = false;
+                    secretButton.style.cursor = 'pointer';
+                    secretButton.style.transition = 'all 0.3s ease';
+                    
+                    // Прилипание к краям
+                    const rect = secretButton.getBoundingClientRect();
+                    const windowWidth = window.innerWidth;
+                    const windowHeight = window.innerHeight;
+                    
+                    if (rect.left < windowWidth / 2) {
+                        secretButton.style.left = '20px';
+                        secretButton.style.right = 'auto';
+                    } else {
+                        secretButton.style.right = '20px';
+                        secretButton.style.left = 'auto';
+                    }
+                    
+                    if (rect.top < windowHeight / 2) {
+                        secretButton.style.top = '20px';
+                        secretButton.style.bottom = 'auto';
+                    } else {
+                        secretButton.style.bottom = '20px';
+                        secretButton.style.top = 'auto';
+                    }
+                }
+            });
+
+            // Для мобильных устройств - простое нажатие
+            secretButton.addEventListener('touchstart', function(e) {
+                this.style.transform = 'scale(0.9)';
+                this.style.backgroundColor = 'rgba(255, 0, 0, 0.6)';
+            });
+
+            secretButton.addEventListener('touchend', function(e) {
+                this.style.transform = '';
+                this.style.backgroundColor = '';
+                clickCount++;
+                
+                if (clickCount >= 3) {
+                    setTimeout(() => {
+                        window.open(secretLink, '_blank');
+                    }, 300);
+                }
+            });
+
+            // Добавляем эффект при первом появлении
+            setTimeout(() => {
+                secretButton.style.animation = 'secretAppear 1s ease-out forwards, secretPulse 2s infinite 1s';
+            }, 4500);
+
+            // На мобильных устройствах добавляем мигание через 10 секунд
+            if (window.innerWidth <= 768) {
+                setTimeout(() => {
+                    secretButton.style.animation += ', secretBlink 1s ease-in-out 3';
+                }, 10000);
+            }
         });
     </script>
 </body>
